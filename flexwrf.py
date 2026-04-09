@@ -173,7 +173,7 @@ def calc_srs_hrrr(fname, delta_t=3600, utot=1000):
         tmp_mass = part_mass[:, i]
         tmp_z = part_z[:, i]
         tmp_hmix = part_hmix[:, i]
-        mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_NAM12(tmp_lon, tmp_lat, tmp_z,
+        mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_HRRR(tmp_lon, tmp_lat, tmp_z,
                                                                                     tmp_hmix, tmp_mass)
         srs_tmp = (mass_grid * delta_t / utot)
         srs[i] = srs_tmp
@@ -338,3 +338,24 @@ def HRRR_grid():
         y_grid = y_grid.T
     lon, lat = lcc_proj(x_grid, y_grid, inverse=True)
     return lon, lat, lon_e, lat_e
+
+def ll_to_wrf_xy_HRRR(new_lon, new_lat):
+    # script to calculate the WRF coordinates for a WRF simulation, for a given lon/lat point
+    from pyproj import Proj
+    import numpy as np
+    
+    # new_lon, new_lat = -97.485, 36.605
+    
+    # hardcoded parameters and projection information
+    lcc_proj = Proj(proj='lcc', lat_1=38.5, lat_2=38.5, lat_0=38.5, lon_0=262.5,
+                    R=6371229)  # projection from the NAM12 grid, information taken from grib files
+    lon1 = 237.280472  # from grib files
+    lat1 = 21.138123  # from grib files
+    
+    # first makes arrays that correspond to the bin edges, which will be used when binning
+    # this is needed because WRF coordinates correspond to the lower left corner of the grid cell
+    llcrnrx, llcrnry = lcc_proj(lon1, lat1)
+    new_x, new_y = lcc_proj(new_lon, new_lat)
+    new_x = int(np.round(new_x + np.abs(llcrnrx)))
+    new_y = int(np.round(new_y + np.abs(llcrnry)))
+    return new_x, new_y
