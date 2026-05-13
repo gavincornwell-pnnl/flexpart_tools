@@ -110,85 +110,85 @@ def writePathname(releaseFolder, outputFolder, metFolder, folder):
     return
 
 
-def writeRELEASES(gridCorner1, gridCorner2, altitude, releaseDateStart, releaseDateEnd, trajName, numParticles,
-                  writeFolder, releaseID):
-    # Script to automate the writing of the RELEASES file for FLEXPART
-    # backtrajectory calculations
-    # gridCorner1 is a Nx2 matrix populated with pairs of the lower left corner of the
-    # desired release box
-    # gridCorner2 is a Nx2 matrix populated with pairs of the upper right corner of the
-    # desired release box
-    # Altitude is a Nx1 or Nx2 matrix populated with the release height or the upper and lower bounds of the
-    # desired release box--should be in meters above sea level
-    # Release date a Nx1 matrix of matlab date numbers corresponding to the
-    # initialization of the backtrajectory
-    # trajName is a Nx1 cell array corresponding to the desired trajectory
-    # names
-    # Each release is currently set to be one hour and 500 particles in a
-    # domain filled box. These can be changed in the first few lines of code if
-    # desired.
-    # print header
-    import os
-    import matplotlib.dates as dt
-    import numpy as np
+#def writeRELEASES(gridCorner1, gridCorner2, altitude, releaseDateStart, releaseDateEnd, trajName, numParticles,
+#                  writeFolder, releaseID):
+#    # Script to automate the writing of the RELEASES file for FLEXPART
+#    # backtrajectory calculations
+#    # gridCorner1 is a Nx2 matrix populated with pairs of the lower left corner of the
+#    # desired release box
+#    # gridCorner2 is a Nx2 matrix populated with pairs of the upper right corner of the
+#    # desired release box
+#    # Altitude is a Nx1 or Nx2 matrix populated with the release height or the upper and lower bounds of the
+#    # desired release box--should be in meters above sea level
+#    # Release date a Nx1 matrix of matlab date numbers corresponding to the
+#    # initialization of the backtrajectory
+#    # trajName is a Nx1 cell array corresponding to the desired trajectory
+#    # names
+#    # Each release is currently set to be one hour and 500 particles in a
+#    # domain filled box. These can be changed in the first few lines of code if
+#    # desired.
+#    # print header
+#    import os
+#    import matplotlib.dates as dt
+#    import numpy as np
 
-    fid = open(os.path.join(writeFolder, 'RELEASES'), 'w')
-    fid.write('*************************************************************************\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*   Input file for the Lagrangian particle dispersion model FLEXPART    *\n')
-    fid.write('*                        Please select your options                     *\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*                                                                       *\n')
-    fid.write('*************************************************************************\n')
-    fid.write('&RELEASES_CTRL\n')
-    fid.write(' NSPEC      =          %d, ! Total number of species\n' % int(len(releaseID)))
-    fid.write(' SPECNUM_REL=          %d, ! Species numbers in directory SPECIES\n' % np.array(releaseID, dtype=int))
-    fid.write('/\n')
-    fid.write('&RELEASE\n')
-    format1 = '%Y%m%d %H%M%S'
-    format2 = '%Y%m%d_%H%M%S'
-    for iidx, i in enumerate(gridCorner1):
-        tmpRDS = releaseDateStart[iidx]
-        if type(tmpRDS) != dt.datetime.datetime:
-            tmpRDS = dt.num2date(tmpRDS)
-        tmpRDE = releaseDateEnd[iidx]
-        if type(tmpRDE) != dt.datetime.datetime:
-            tmpRDE = dt.num2date(tmpRDE)
-        startDateStr = dt.datetime.datetime.strftime(tmpRDS, format=format1)
-        endDateStr = dt.datetime.datetime.strftime(tmpRDE, format=format1)
-        trajNameFinal = trajName + '_' + dt.datetime.datetime.strftime(tmpRDE, format=format2) + '_' + str(
-            iidx + 1).zfill(3)
-        fid.write(' IDATE1  =       ' + startDateStr[
-                                        0:8] + ', ! Release start date, YYYYMMDD: YYYY=year, MM=month, DD=day\n')  # start time of release
-        fid.write(' ITIME1  =        ' + startDateStr[
-                                         8:] + ', ! Release start time in UTC HHMISS: HH hours, MI=minutes, SS=seconds\n')  # end time of release
-        fid.write(' IDATE2  =       ' + endDateStr[
-                                        0:8] + ', ! Release start date, YYYYMMDD: YYYY=year, MM=month, DD=day\n')  # start time of release
-        fid.write(' ITIME2  =        ' + endDateStr[
-                                         8:] + ', ! Release start time in UTC HHMISS: HH hours, MI=minutes, SS=seconds\n')  # end time of release
-        fid.write(' LON1    =         ' + str(
-            gridCorner1[iidx][0]) + ', ! Left longitude of release box -180 < LON1 <180 \n')  # Lower left latitude
-        fid.write(' LON2    =         ' + str(
-            gridCorner2[iidx][0]) + ', ! Right longitude of release box, same as LON1 \n')  # Lower left latitude
-        fid.write(' LAT1    =           ' + str(
-            gridCorner1[iidx][1]) + ', ! Lower latitude of release box, -90 < LAT1 < 90 \n')  # Lower left latitude
-        fid.write(' LAT2    =           ' + str(
-            gridCorner2[iidx][1]) + ', ! Upper latitude of release box same format as LAT1 \n')  # Lower left latitude
-        fid.write(' Z1      =             ' + str(
-            altitude[iidx][0]) + ', ! Lower height of release box meters/hPa above reference level\n')
-        fid.write(' Z2      =             ' + str(
-            altitude[iidx][1]) + ', ! Upper height of release box meters/hPa above reference level\n')
-        fid.write(
-            ' ZKIND   =              1, ! Reference level 1=above ground, 2=above sea level, 3 for pressure in hPa\n')
-        fid.write(' MASS    =           1000, ! Total mass emitted, only relevant for fwd simulations\n')
-        fid.write(' PARTS   =          ' + str(numParticles) + ', ! Total number of particles to be released\n')
-        fid.write(' COMMENT =    "' + trajNameFinal + '", ! Comment, written in the outputfile\n')
-        fid.write('/\n')
-    fid.close  # close file
-    return
+#    fid = open(os.path.join(writeFolder, 'RELEASES'), 'w')
+#    fid.write('*************************************************************************\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*   Input file for the Lagrangian particle dispersion model FLEXPART    *\n')
+#    fid.write('*                        Please select your options                     *\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*                                                                       *\n')
+#    fid.write('*************************************************************************\n')
+#    fid.write('&RELEASES_CTRL\n')
+#    fid.write(' NSPEC      =          %d, ! Total number of species\n' % int(len(releaseID)))
+#    fid.write(' SPECNUM_REL=          %d, ! Species numbers in directory SPECIES\n' % np.array(releaseID, dtype=int))
+#    fid.write('/\n')
+#    fid.write('&RELEASE\n')
+#    format1 = '%Y%m%d %H%M%S'
+#    format2 = '%Y%m%d_%H%M%S'
+#    for iidx, i in enumerate(gridCorner1):
+#        tmpRDS = releaseDateStart[iidx]
+#        if type(tmpRDS) != dt.datetime.datetime:
+#            tmpRDS = dt.num2date(tmpRDS)
+#        tmpRDE = releaseDateEnd[iidx]
+#        if type(tmpRDE) != dt.datetime.datetime:
+#            tmpRDE = dt.num2date(tmpRDE)
+#        startDateStr = dt.datetime.datetime.strftime(tmpRDS, format=format1)
+#        endDateStr = dt.datetime.datetime.strftime(tmpRDE, format=format1)
+#        trajNameFinal = trajName + '_' + dt.datetime.datetime.strftime(tmpRDE, format=format2) + '_' + str(
+#            iidx + 1).zfill(3)
+#        fid.write(' IDATE1  =       ' + startDateStr[
+#                                        0:8] + ', ! Release start date, YYYYMMDD: YYYY=year, MM=month, DD=day\n')  # start time of release
+#        fid.write(' ITIME1  =        ' + startDateStr[
+#                                         8:] + ', ! Release start time in UTC HHMISS: HH hours, MI=minutes, SS=seconds\n')  # end time of release
+#        fid.write(' IDATE2  =       ' + endDateStr[
+#                                        0:8] + ', ! Release start date, YYYYMMDD: YYYY=year, MM=month, DD=day\n')  # start time of release
+#        fid.write(' ITIME2  =        ' + endDateStr[
+#                                         8:] + ', ! Release start time in UTC HHMISS: HH hours, MI=minutes, SS=seconds\n')  # end time of release
+#        fid.write(' LON1    =         ' + str(
+#            gridCorner1[iidx][0]) + ', ! Left longitude of release box -180 < LON1 <180 \n')  # Lower left latitude
+#        fid.write(' LON2    =         ' + str(
+#            gridCorner2[iidx][0]) + ', ! Right longitude of release box, same as LON1 \n')  # Lower left latitude
+#        fid.write(' LAT1    =           ' + str(
+#            gridCorner1[iidx][1]) + ', ! Lower latitude of release box, -90 < LAT1 < 90 \n')  # Lower left latitude
+#        fid.write(' LAT2    =           ' + str(
+#            gridCorner2[iidx][1]) + ', ! Upper latitude of release box same format as LAT1 \n')  # Lower left latitude
+#        fid.write(' Z1      =             ' + str(
+#            altitude[iidx][0]) + ', ! Lower height of release box meters/hPa above reference level\n')
+#        fid.write(' Z2      =             ' + str(
+#            altitude[iidx][1]) + ', ! Upper height of release box meters/hPa above reference level\n')
+#        fid.write(
+#            ' ZKIND   =              1, ! Reference level 1=above ground, 2=above sea level, 3 for pressure in hPa\n')
+#        fid.write(' MASS    =           1000, ! Total mass emitted, only relevant for fwd simulations\n')
+#        fid.write(' PARTS   =          ' + str(numParticles) + ', ! Total number of particles to be released\n')
+#        fid.write(' COMMENT =    "' + trajNameFinal + '", ! Comment, written in the outputfile\n')
+#        fid.write('/\n')
+#    fid.close  # close file
+#    return
 
 
 def writeRELEASES(gridCorner1, gridCorner2, altitude, releaseDateStart, releaseDateEnd, trajName, numParticles,
@@ -226,7 +226,7 @@ def writeRELEASES(gridCorner1, gridCorner2, altitude, releaseDateStart, releaseD
     fid.write('*************************************************************************\n')
     fid.write('&RELEASES_CTRL\n')
     fid.write(' NSPEC      =          %d, ! Total number of species\n' % len(releaseID))
-    fid.write(' SPECNUM_REL=          %s, ! Species numbers in directory SPECIES\n' % str(releaseID)[1:-1])
+    fid.write(' SPECNUM_REL=          %d, ! Species numbers in directory SPECIES\n' % releaseID[0])
     fid.write('/\n')
     fid.write('&RELEASE\n')
     format1 = '%Y%m%d %H%M%S'

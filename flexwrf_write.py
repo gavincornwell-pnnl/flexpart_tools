@@ -1,4 +1,4 @@
-def writeFLEXWRF_input(StartTime,EndTime,NumPart,Longitude,Latitude,NewInputFile,OutputPath,MetPath,Available,TemplateFile='./input.hrrr.template'):
+def writeFLEXWRF_input(StartTime,EndTime,NumPart,Longitude,Latitude,Altitude1,Altitude2,NewInputFile,OutputPath,MetPath,Available,TemplateFile='./input.hrrr.template'):
     '''
     Function to write a flexpart-wrf file using a template file. The key parameters, are:
     StartTime: as python datetiem
@@ -40,7 +40,9 @@ def writeFLEXWRF_input(StartTime,EndTime,NumPart,Longitude,Latitude,NewInputFile
     lines[79] = '   %s        XPOINT1 (real)  latitude [deg] of lower left corner\n' % str(Latitude)
     lines[80] = '   %s        XPOINT2 (real)  longitude [deg] of upper right corner\n' % str(Longitude)
     lines[81] = '   %s        YPOINT2 (real)  latitude [deg] of upper right corner\n' % str(Latitude)
-    lines[85] = '  %s           NPART (int)    total number of particles to be released\n' % str(NumPart) 
+    lines[83] = '   %s           ZPOINT1 (real)    lower z-level \n' % str(Altitude1) 
+    lines[84] = '   %s           ZPOINT2 (real)    upper z-level \n' % str(Altitude2) 
+    lines[85] = '   %s           NPART (int)    total number of particles to be released\n' % str(NumPart) 
     simname = os.path.basename(NewInputFile)
     lines[87] = '   %s       NAME OF RELEASE LOCATION^M\n' % simname 
 
