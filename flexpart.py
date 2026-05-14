@@ -255,6 +255,7 @@ def calc_srs_nam12(fname, delta_t, utot):
 
 
 def calc_srs_hrrr(fname, delta_t, utot):
+
     """
     This function calculates a source-receptor influence footprint for a given partouput.nc file
     fname is the full file name for which a SRS should be generated for. meant to be run with the ouptut from flexpart11
