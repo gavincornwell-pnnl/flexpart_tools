@@ -269,7 +269,6 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
     srs = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
     hmix = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
-    print(np.shape(part_lon), np.shape(matlab_times))
     for iidx, i in enumerate(matlab_times):
         srs_tmp = np.zeros((len(x_grid), len(y_grid)))
         temp_lon = part_lon[:, iidx]
