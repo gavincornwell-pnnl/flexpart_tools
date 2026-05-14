@@ -148,91 +148,176 @@ def calc_kernel(lon, lat, grid):
         latidx_out = np.ones(4) * -1
     return weights, lonidx_out, latidx_out
 
+## TODO: fix calc_srs_kernel
+# def calc_srs_kernel(fname, grid, delta_t, utot, *args):
+#     """
+#     This function calculates a source-receptor influence footprint for a given partouput file.
+#     fname is the full file name for which a SRS should be generated for.
+#     grid is a two dimensional grid specifying the lon/lat
+#     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
+#     utot is the total mass released (units in kg)
+#     *args is an optional input for whether or not to turn the flexpart kernel on (see above function)
+#     """
+#     alt1 = 0
+#     alt2 = 300
+#     import numpy as np
+#     if len(args) > 0:
+#         kernel = args[0]
+#     else:
+#         kernel = 0
+#     temp_part, time, numpart = read_partposition_flexpart(fname)
+#     srs = np.zeros((len(grid[0]), len(grid[1])))  # set up grid
+#     grid_diff1 = np.diff(grid[0])[0]
+#     grid_diff2 = np.diff(grid[1])[0]
+#     for jidx, j in enumerate(temp_part):
+#         temp_alt = j[3] + j[4]
+#         if np.logical_and(temp_alt >= alt1, temp_alt <= alt2):
+#             q = j[-1]  # for mass concentration output
+#             if kernel == 1:
+#                 weights = calc_kernel(j[2], j[3], grid)
+#                 if weights[0][0] >= 0:
+#                     srs[weights[1][0]][weights[2][0]] = srs[weights[1][0]][weights[2][0]] + (
+#                             q * weights[0][0] * np.abs(delta_t)) / utot
+#                     srs[weights[1][1]][weights[2][1]] = srs[weights[1][1]][weights[2][1]] + (
+#                             q * weights[0][1] * np.abs(delta_t)) / utot
+#                     srs[weights[1][2]][weights[2][2]] = srs[weights[1][2]][weights[2][2]] + (
+#                             q * weights[0][2] * np.abs(delta_t)) / utot
+#                     srs[weights[1][3]][weights[2][3]] = srs[weights[1][3]][weights[2][3]] + (
+#                             q * weights[0][3] * np.abs(delta_t)) / utot
+#             else:
+#                 idx1 = np.where(np.logical_and(j[2] >= grid[0], j[2] - grid_diff1 <= grid[0]))[0]
+#                 idx2 = np.where(np.logical_and(j[3] >= grid[1], j[3] - grid_diff2 <= grid[1]))[0]
+#                 if np.logical_and(len(idx1) > 0, len(idx2) > 0):
+#                     idx1 = idx1[0]
+#                     idx2 = idx2[0]
+#                     #					print(j[2],grid[0][idx1],j[3],grid[1][idx2])
+#                     srs[idx1][idx2] = srs[idx1][idx2] + (q * np.abs(delta_t) / utot)
+#     #				else:
+#     #					print(j[2],j[3])
+#
+#     return srs, time
 
-def calc_srs(fname, grid, delta_t, utot, *args):
+
+def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     """
-    This function calcualtes a source-receptor influence footprint for a given partouput file.
+    This function calculates a source-receptor influence footprint for a given partouput.nc file
     fname is the full file name for which a SRS should be generated for.
-    grid is a two dimensional grid specifying the lon/lat
+    x_grid and y_grid are both 1-d arrays specifying the lon/lat
     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
     utot is the total mass released (units in kg)
-    *args is an optional input for whether or not to turn the flexpart kernel on (see above function)
     """
-    alt1 = 0
-    alt2 = 300
     import numpy as np
-    if len(args) > 0:
-        kernel = args[0]
-    else:
-        kernel = 0
-    temp_part, time, numpart = read_partposition_flexpart(fname)
-    srs = np.zeros((len(grid[0]), len(grid[1])))  # set up grid
-    grid_diff1 = np.diff(grid[0])[0]
-    grid_diff2 = np.diff(grid[1])[0]
-    for jidx, j in enumerate(temp_part):
-        temp_alt = j[3] + j[4]
-        if np.logical_and(temp_alt >= alt1, temp_alt <= alt2):
-            q = j[-1]  # for mass concentration output
-            if kernel == 1:
-                weights = calc_kernel(j[2], j[3], grid)
-                if weights[0][0] >= 0:
-                    srs[weights[1][0]][weights[2][0]] = srs[weights[1][0]][weights[2][0]] + (
-                            q * weights[0][0] * np.abs(delta_t)) / utot
-                    srs[weights[1][1]][weights[2][1]] = srs[weights[1][1]][weights[2][1]] + (
-                            q * weights[0][1] * np.abs(delta_t)) / utot
-                    srs[weights[1][2]][weights[2][2]] = srs[weights[1][2]][weights[2][2]] + (
-                            q * weights[0][2] * np.abs(delta_t)) / utot
-                    srs[weights[1][3]][weights[2][3]] = srs[weights[1][3]][weights[2][3]] + (
-                            q * weights[0][3] * np.abs(delta_t)) / utot
-            else:
-                idx1 = np.where(np.logical_and(j[2] >= grid[0], j[2] - grid_diff1 <= grid[0]))[0]
-                idx2 = np.where(np.logical_and(j[3] >= grid[1], j[3] - grid_diff2 <= grid[1]))[0]
-                if np.logical_and(len(idx1) > 0, len(idx2) > 0):
-                    idx1 = idx1[0]
-                    idx2 = idx2[0]
-                    #					print(j[2],grid[0][idx1],j[3],grid[1][idx2])
-                    srs[idx1][idx2] = srs[idx1][idx2] + (q * np.abs(delta_t) / utot)
-    #				else:
-    #					print(j[2],j[3])
 
-    return srs, time
+    part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
+    srs = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
+    hmix = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
+    for iidx, i in enumerate(matlab_times):
+        temp_lon = part_lon[:, iidx]
+        temp_lon = 180 - temp_lon
+        temp_lat = part_lat[:, iidx]
+        temp_alt = part_z[:, iidx]
+        temp_hmix = part_hmix[:, iidx]
+        temp_mass = part_mass[:, iidx]
+        mass_grid, hmix_grid, indices = bin_particles_FP11(temp_lon, temp_lat, temp_alt, temp_hmix, temp_mass, x_grid,
+                                                           y_grid)
+        srs_tmp = (mass_grid * delta_t / utot)
+        srs[iidx] = srs_tmp
+        hmix[iidx] = hmix_grid
+    return srs, hmix, matlab_times
 
 
 def calc_srs_nam12(fname, delta_t, utot):
     """
-    This function calculates a source-receptor influence footprint for a given partouput file from a flexpart 11
-    simulation. The grid corresponds to the NAM12 grid https://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID218).
-    fname is the full file name for which a SRS should be generated for.
+    This function calculates a source-receptor influence footprint for a given partouput.nc file
+    fname is the full file name for which a SRS should be generated for. meant to be run with the ouptut from flexpart11
+    simulations.
     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
     utot is the total mass released (units in kg)
-
-    returns a srs, which is
     """
-    import flexpart as fp
     import numpy as np
-    srs = np.zeros((24, 614, 428))
-    hmix = np.zeros((24, 614, 428))
-    utot = 1000000
-    delta_t = 3600
-    part_lon, part_lat, part_mass, part_z, part_hmix, time, seconds = read_partposition_fp11(fname)
-    for i in np.arange(24):
-        tmp_lon = part_lon[:, i]
-        tmp_lat = part_lat[:, i]
-        tmp_mass = part_mass[:, i]
-        tmp_z = part_z[:, i]
-        tmp_hmix = part_hmix[:, i]
-        mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_NAM12(tmp_lon, tmp_lat, tmp_z,
-                                                                                    tmp_hmix, tmp_mass)
+
+    part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
+    lon, lat, lon_e, lat_e, x_e, y_e = NAM12_grid()
+    srs = np.zeros((len(matlab_times), len(lon), len(lat)))  # set up grid
+    hmix = np.zeros((len(matlab_times), len(lon), len(lat)))  # set up grid
+    for iidx, i in enumerate(matlab_times):
+        temp_lon = part_lon[:, iidx]
+        temp_lon = 180 - temp_lon
+        temp_lat = part_lat[:, iidx]
+        temp_alt = part_z[:, iidx]
+        temp_hmix = part_hmix[:, iidx]
+        temp_mass = part_mass[:, iidx]
+        mass_grid, hmix_grid, indices = bin_particles_NAM12(temp_lon, temp_lat, temp_alt, temp_hmix, temp_mass)
         srs_tmp = (mass_grid * delta_t / utot)
-        srs[i] = srs_tmp
-        hmix[i] = hmix_grid
-    return srs, hmix, seconds
+        srs[iidx] = srs_tmp
+        hmix[iidx] = hmix_grid
+    return srs, hmix, matlab_times
+
+
+def calc_srs_hrrr(fname, delta_t, utot):
+    """
+    This function calculates a source-receptor influence footprint for a given partouput.nc file
+    fname is the full file name for which a SRS should be generated for. meant to be run with the ouptut from flexpart11
+    simulations.
+    delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
+    utot is the total mass released (units in kg)
+    """
+    import numpy as np
+
+    part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
+    lon, lat, lon_e, lat_e, x_e, y_e = HRRR_grid()
+    srs = np.zeros((len(matlab_times), len(lon), len(lat)))  # set up grid
+    hmix = np.zeros((len(matlab_times), len(lon), len(lat)))  # set up grid
+    for iidx, i in enumerate(matlab_times):
+        temp_lon = part_lon[:, iidx]
+        temp_lon = 180 - temp_lon
+        temp_lat = part_lat[:, iidx]
+        temp_alt = part_z[:, iidx]
+        temp_hmix = part_hmix[:, iidx]
+        temp_mass = part_mass[:, iidx]
+        mass_grid, hmix_grid, indices = bin_particles_NAM12(temp_lon, temp_lat, temp_alt, temp_hmix, temp_mass)
+        srs_tmp = (mass_grid * delta_t / utot)
+        srs[iidx] = srs_tmp
+        hmix[iidx] = hmix_grid
+    return srs, hmix, matlab_times
+
+
+# def calc_srs_nam12(fname, delta_t, utot):
+#     """
+#     This function calculates a source-receptor influence footprint for a given partouput file from a flexpart 11
+#     simulation. The grid corresponds to the NAM12 grid https://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID218).
+#     fname is the full file name for which a SRS should be generated for.
+#     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
+#     utot is the total mass released (units in kg)
+#
+#     returns a srs, which is
+#     """
+#     import flexpart as fp
+#     import numpy as np
+#     srs = np.zeros((24, 614, 428))
+#     hmix = np.zeros((24, 614, 428))
+#     utot = 1000000
+#     delta_t = 3600
+#     part_lon, part_lat, part_mass, part_z, part_hmix, time, seconds = read_partposition_fp11(fname)
+#     for i in np.arange(24):
+#         tmp_lon = part_lon[:, i]
+#         tmp_lat = part_lat[:, i]
+#         tmp_mass = part_mass[:, i]
+#         tmp_z = part_z[:, i]
+#         tmp_hmix = part_hmix[:, i]
+#         mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_NAM12(tmp_lon, tmp_lat, tmp_z,
+#                                                                                     tmp_hmix, tmp_mass)
+#         srs_tmp = (mass_grid * delta_t / utot)
+#         srs[i] = srs_tmp
+#         hmix[i] = hmix_grid
+#     return srs, hmix, seconds
 
 
 def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
     """
     This function calculates a source-receptor influence footprint for a given partouput file from a flexpart-wrf
-    simulation. The grid corresponds to the HRRR grid
+    simulation. The grid corresponds to user-specified grid. This should be used for flexpart-wrf simulations, assuming
+    that the output grid is in WRF coordinates.
     fname is the full file name for which a SRS should be generated for.
     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
     utot is the total mass released (units in kg)
@@ -255,36 +340,6 @@ def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
     return srs, hmix, seconds
 
 
-def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
-    """
-    This function calculates a source-receptor influence footprint for a given partouput.nc file
-    fname is the full file name for which a SRS should be generated for.
-    x_grid and y_grid are both 1-d arrays specifying the lon/lat
-    delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
-    utot is the total mass released (units in kg)
-    *args is an optional input for whether or not to turn the flexpart kernel on (see above function)
-    """
-    import numpy as np
-
-    part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
-    srs = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
-    hmix = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
-    for iidx, i in enumerate(matlab_times):
-        srs_tmp = np.zeros((len(x_grid), len(y_grid)))
-        temp_lon = part_lon[:, iidx]
-        temp_lon = 180 - temp_lon
-        temp_lat = part_lat[:, iidx]
-        temp_alt = part_z[:, iidx]
-        temp_hmix = part_hmix[:, iidx]
-        temp_mass = part_mass[:, iidx]
-        mass_grid, hmix_grid, indices = bin_particles_FP11(temp_lon, temp_lat, temp_alt, temp_hmix, temp_mass, x_grid,
-                                                           y_grid)
-        srs_tmp = (mass_grid * delta_t / utot)
-        srs[iidx] = srs_tmp
-        hmix[iidx] = hmix_grid
-    return srs, hmix, matlab_times
-
-
 def bin_particles_NAM12(part_lon, part_lat, part_z, hmix, part_mass):
     '''
     This function is intended to take the geodetic data from particle from FLEXPART simulations and transpose it on to the NAM12 grid.
@@ -297,7 +352,7 @@ def bin_particles_NAM12(part_lon, part_lat, part_z, hmix, part_mass):
     # hardcode parameters and projection information
     lcc_proj = Proj(proj='lcc', lat_1=25, lat_2=25, lat_0=25, lon_0=265,
                     R=6371229)  # projection from the NAM12 grid, information taken from grib files
-    lon, lat, lon_e, lat_e = NAM12_grid()  # lon/lat values
+    lon, lat, lon_e, lat_e, x_e, y_e = NAM12_grid()  # lon/lat values
 
     # only select particles that are within the boundary layer
     idx = np.where(part_z < hmix)
@@ -327,7 +382,7 @@ def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass):
     # hardcode parameters and projection information
     lcc_proj = Proj(proj='lcc', lat_1=25, lat_2=25, lat_0=25, lon_0=265,
                     R=6371229)  # projection from the NAM12 grid, information taken from grib files
-    lon, lat, lon_e, lat_e = HRRR_grid()  # lon/lat values
+    lon, lat, lon_e, lat_e, x_e, y_e = HRRR_grid()  # lon/lat values
 
     # only select particles that are within the boundary layer
     idx = np.where(part_z < hmix)
@@ -434,7 +489,7 @@ def NAM12_grid():
         x_grid = x_grid.T
         y_grid = y_grid.T
     lon, lat = lcc_proj(x_grid, y_grid, inverse=True)
-    return lon, lat, lon_e, lat_e
+    return lon, lat, lon_e, lat_e, x_e, y_e
 
 
 def HRRR_grid():
@@ -471,7 +526,7 @@ def HRRR_grid():
         x_grid = x_grid.T
         y_grid = y_grid.T
     lon, lat = lcc_proj(x_grid, y_grid, inverse=True)
-    return lon, lat, lon_e, lat_e
+    return lon, lat, lon_e, lat_e, x_e, y_e
 
 
 def calculate_point_HRRR(lon, lat):
