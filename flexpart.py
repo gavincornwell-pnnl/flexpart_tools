@@ -310,7 +310,6 @@ def calc_srs_hrrr(fname, delta_t, utot):
 #         srs_tmp = (mass_grid * delta_t / utot)
 #         srs[i] = srs_tmp
 #         hmix[i] = hmix_grid
-#     return srs, hmix, seconds
 
 
 def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
