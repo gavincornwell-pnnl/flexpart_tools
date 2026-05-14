@@ -226,6 +226,8 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     return srs, hmix, matlab_times
 
 
+
+
 def calc_srs_nam12(fname, delta_t, utot):
     """
     This function calculates a source-receptor influence footprint for a given partouput.nc file
