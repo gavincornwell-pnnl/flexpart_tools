@@ -148,6 +148,7 @@ def calc_kernel(lon, lat, grid):
         latidx_out = np.ones(4) * -1
     return weights, lonidx_out, latidx_out
 
+
 ## TODO: fix calc_srs_kernel
 # def calc_srs_kernel(fname, grid, delta_t, utot, *args):
 #     """
@@ -226,8 +227,6 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     return srs, hmix, matlab_times
 
 
-
-
 def calc_srs_nam12(fname, delta_t, utot):
     """
     This function calculates a source-receptor influence footprint for a given partouput.nc file
@@ -257,7 +256,6 @@ def calc_srs_nam12(fname, delta_t, utot):
 
 
 def calc_srs_hrrr(fname, delta_t, utot):
-
     """
     This function calculates a source-receptor influence footprint for a given partouput.nc file
     fname is the full file name for which a SRS should be generated for. meant to be run with the ouptut from flexpart11
@@ -285,36 +283,6 @@ def calc_srs_hrrr(fname, delta_t, utot):
     return srs, hmix, matlab_times
 
 
-# def calc_srs_nam12(fname, delta_t, utot):
-#     """
-#     This function calculates a source-receptor influence footprint for a given partouput file from a flexpart 11
-#     simulation. The grid corresponds to the NAM12 grid https://www.nco.ncep.noaa.gov/pmb/docs/on388/tableb.html#GRID218).
-#     fname is the full file name for which a SRS should be generated for.
-#     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
-#     utot is the total mass released (units in kg)
-#
-#     returns a srs, which is
-#     """
-#     import flexpart as fp
-#     import numpy as np
-#     srs = np.zeros((24, 614, 428))
-#     hmix = np.zeros((24, 614, 428))
-#     utot = 1000000
-#     delta_t = 3600
-#     part_lon, part_lat, part_mass, part_z, part_hmix, time, seconds = read_partposition_fp11(fname)
-#     for i in np.arange(24):
-#         tmp_lon = part_lon[:, i]
-#         tmp_lat = part_lat[:, i]
-#         tmp_mass = part_mass[:, i]
-#         tmp_z = part_z[:, i]
-#         tmp_hmix = part_hmix[:, i]
-#         mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_NAM12(tmp_lon, tmp_lat, tmp_z,
-#                                                                                     tmp_hmix, tmp_mass)
-#         srs_tmp = (mass_grid * delta_t / utot)
-#         srs[i] = srs_tmp
-#         hmix[i] = hmix_grid
-
-
 def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
     """
     This function calculates a source-receptor influence footprint for a given partouput file from a flexpart-wrf
@@ -335,7 +303,7 @@ def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
     part_z = partout[:, 4]
     part_hmix = partout[:, 5]
     part_mass = partout[:, -1]
-    mass_grid, hmix_grid, indices = bin_particles_WRF(part_x, part_y, part_z, part_hmix, part_mass)
+    mass_grid, hmix_grid, indices = bin_particles_WRF(part_x, part_y, part_z, part_hmix, part_mass, x_grid, y_grid)
     srs_tmp = (mass_grid * delta_t / utot)
     srs = srs_tmp
     hmix = hmix_grid
@@ -382,7 +350,7 @@ def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass):
     from scipy.stats import binned_statistic_2d as bs2d
 
     # hardcode parameters and projection information
-    lcc_proj = Proj(proj='lcc', lat_1=25, lat_2=25, lat_0=25, lon_0=265,
+    lcc_proj = Proj(proj='lcc', lat_1=38.5, lat_2=38.5, lat_0=38.5, lon_0=262.5,
                     R=6371229)  # projection from the NAM12 grid, information taken from grib files
     lon, lat, lon_e, lat_e, x_e, y_e = HRRR_grid()  # lon/lat values
 
@@ -402,18 +370,19 @@ def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass):
     return mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices
 
 
-def bin_particles_WRF(part_lon, part_lat, part_z, hmix, part_mass):
+def bin_particles_WRF(part_lon, part_lat, part_z, hmix, part_mass, x_e, y_e):
     '''
-    This function is intended to take the geodetic data from particle from FLEXPART simulations and transpose it on to WRF grid.
+    This function bins particles using a given grid definitions (x_e, y_e). Grids are intended to be in wrf coordinates
+    i.e. meters.
     '''
     import numpy as np
     from scipy.stats import binned_statistic_2d as bs2d
 
-    # grid information
-    dx, dy = (3000, 3000)
-    nx, ny = (1799, 1059)
-    x_e = np.arange(nx + 1) * (dx)  # has to extend out an extra grid cell because it is the edge
-    y_e = np.arange(ny + 1) * (dy)
+    # # grid information
+    # dx, dy = (3000, 3000)
+    # nx, ny = (1799, 1059)
+    # x_e = np.arange(nx + 1) * (dx)  # has to extend out an extra grid cell because it is the edge
+    # y_e = np.arange(ny + 1) * (dy)
 
     # only select particles that are within the boundary layer
     idx = np.where(part_z < hmix)
