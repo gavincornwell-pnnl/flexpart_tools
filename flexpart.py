@@ -257,7 +257,7 @@ def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
 
 def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     """
-    This function calcualtes a source-receptor influence footprint for a given partouput.nc file
+    This function calculates a source-receptor influence footprint for a given partouput.nc file
     fname is the full file name for which a SRS should be generated for.
     x_grid and y_grid are both 1-d arrays specifying the lon/lat
     delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
@@ -267,9 +267,9 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     import numpy as np
 
     part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
-    srs = np.zeros((len(matlab_times), len(x_grid)-1, len(y_grid)-1))  # set up grid
-    hmix = np.zeros((len(matlab_times), len(x_grid)-1, len(y_grid)-1))  # set up grid
-    print(np.shape(part_lon),np.shape(matlab_times))
+    srs = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
+    hmix = np.zeros((len(matlab_times), len(x_grid) - 1, len(y_grid) - 1))  # set up grid
+    print(np.shape(part_lon), np.shape(matlab_times))
     for iidx, i in enumerate(matlab_times):
         srs_tmp = np.zeros((len(x_grid), len(y_grid)))
         temp_lon = part_lon[:, iidx]
