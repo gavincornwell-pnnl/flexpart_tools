@@ -95,7 +95,7 @@ def read_partposition_fp11(fname):
     minute = int(tmp[10:12])
     second = int(tmp[12:14])
     basetime = dt.date2num(dt.datetime.datetime(year, month, day, hour, minute, second)) * 24 * 3600
-    matlab_times = basetime + np.arange(0, 24) * delta_t
+    matlab_times = basetime + np.arange(0, len(time)) * delta_t
     ds.close()
     return part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times
 
@@ -267,11 +267,13 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
     import numpy as np
 
     part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
-    srs = np.zeros((len(matlab_times), len(x_grid), len(y_grid)))  # set up grid
-    hmix = np.zeros((len(matlab_times), len(x_grid), len(y_grid)))  # set up grid
+    srs = np.zeros((len(matlab_times), len(x_grid)-1, len(y_grid)-1))  # set up grid
+    hmix = np.zeros((len(matlab_times), len(x_grid)-1, len(y_grid)-1))  # set up grid
+    print(np.shape(part_lon),np.shape(matlab_times))
     for iidx, i in enumerate(matlab_times):
         srs_tmp = np.zeros((len(x_grid), len(y_grid)))
         temp_lon = part_lon[:, iidx]
+        temp_lon = 180 - temp_lon
         temp_lat = part_lat[:, iidx]
         temp_alt = part_z[:, iidx]
         temp_hmix = part_hmix[:, iidx]
@@ -281,6 +283,7 @@ def calc_srs_fp11(fname, x_grid, y_grid, delta_t, utot):
         srs_tmp = (mass_grid * delta_t / utot)
         srs[iidx] = srs_tmp
         hmix[iidx] = hmix_grid
+    return srs, hmix, matlab_times
 
 
 def bin_particles_NAM12(part_lon, part_lat, part_z, hmix, part_mass):
