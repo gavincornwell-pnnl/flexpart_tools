@@ -131,7 +131,7 @@ for tidx, tmp in enumerate(swi_fnames):
 folder = '/rcfs/scratch/corn062/AGINSGP/HRRR/AGINSGP.220408000000'
 fnamelist = os.listdir(folder)
 fnamelist = np.sort([i for i in fnamelist if i.startswith('partposit')])[::-1]
-fname = os.path.join(folder, fnamelist[0]) #
+fname = os.path.join(folder, fnamelist[0])  #
 partout, time, _ = fp.read_partposition_flexpart(fname)
 numpart = np.shape(partout)[0]
 numtimes = len(fnamelist)
@@ -155,7 +155,7 @@ part_fcover = np.ones((numpart, numtimes)) * -9999
 part_swi_01 = np.ones((numpart, numtimes)) * -9999
 part_swi_05 = np.ones((numpart, numtimes)) * -9999
 part_swi_10 = np.ones((numpart, numtimes)) * -9999
-times = np.ones(numtimes) * -9999
+matlab_times = np.ones(numtimes) * -9999
 
 ### loop over files, which each correspond to 1 time
 for iidx, i in enumerate(fnamelist[0:2]):
@@ -172,7 +172,7 @@ for iidx, i in enumerate(fnamelist[0:2]):
     year = str(date.year)
     month = str(date.month).zfill(2)
     day = str(date.day).zfill(2)
-    times[iidx] = dt.date2num(date)
+    matlab_times[iidx] = dt.date2num(date)
     # convert X/Y values to lon/lat values
     lcc_proj = Proj(proj='lcc', lat_1=38.5, lat_2=38.5, lat_0=38.5, lon_0=262.5,
                     R=6371229)  # projection from the NAM12 grid, information taken from grib files
