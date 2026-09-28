@@ -6,6 +6,7 @@ This library contains functions for writing, processing, and analyzing flexpart-
 """
 
 
+
 def modify_lasso(fname, gridcell_width, numgridcells):
     """
     This function reads in a LASSO output file and modifies the latitude/longitude
@@ -92,7 +93,101 @@ def ll_to_wrf_xy_HRRR(new_lon, new_lat):
     # this is needed because WRF coordinates correspond to the lower left corner of the grid cell
     llcrnrx, llcrnry = lcc_proj(lon1, lat1)
     new_x, new_y = lcc_proj(new_lon, new_lat)
-    new_x = int(np.round(new_x + np.abs(llcrnrx)))
-    new_y = int(np.round(new_y + np.abs(llcrnry)))
+    new_x = np.round(new_x + np.abs(llcrnrx))
+    new_y = np.round(new_y + np.abs(llcrnry))
     return new_x, new_y
+
+
+def extract_3d_var(grbs, varname):
+    '''
+    This function extracts 3D data from a grib file.
+    :param fname: filename of grib file
+    :param varname: variable to be extracted, must be a 3-d variable
+    :return data_corr: data arranged from 1000 to 50 hPa
+    :return hPa: hPa of data
+    :return lon: longitude
+    :return lat: latitude
+    '''
+    import numpy as np
+    import pygrib as pg
+    
+    grbs.seek(0)
+    msg = grbs.read(1)[0]
+    nx, ny = msg.Nx, msg.Ny
+    msg = grbs.select(shortName=varname, typeOfLevel='hybrid')
+    datacat = np.zeros((len(msg), ny, nx))
+    levelcat = np.zeros(len(msg))
+    for iidx, item in enumerate(msg):
+        data, lat, lon = item.data()
+        data = (data  * item.scaleValuesBy) + item.offsetValuesBy
+        level = item.level
+        datacat[iidx, :, :] = data
+        levelcat[iidx] = level
+    levels = levelcat
+    data = datacat[:]
+    return data, levels, lon, lat
+
+
+def bilinear_rect(lon, lat, F, xp, yp, clip=True):
+    """
+    Bilinear interpolation of F on a rectilinear grid (lat, lon).
+
+    lon: (nx,) increasing
+    lat: (ny,) increasing
+    F:   (ny, nx) or (..., ny, nx)
+    xp:  (npart,) lon of query points
+    yp:  (npart,) lat of query points
+    """
+    import numpy as np
+    nx = lon.size
+    ny = lat.size
+    npart = xp.size
+
+    # 1) bracket indices (hi is first index where coord >= point)
+    ix_hi = np.searchsorted(lon, xp, side="left")
+    iy_hi = np.searchsorted(lat, yp, side="left")
+    ix_lo = ix_hi - 1
+    iy_lo = iy_hi - 1
+
+    # 2) handle boundaries
+    if clip:
+        ix_lo = np.clip(ix_lo, 0, nx - 2)
+        iy_lo = np.clip(iy_lo, 0, ny - 2)
+        ix_hi = ix_lo + 1
+        iy_hi = iy_lo + 1
+    else:
+        # you can decide your own behavior for out-of-domain points
+        pass
+
+    # 3) fractional distance in cell [lo, hi]
+    x0 = lon[ix_lo]; x1 = lon[ix_hi]
+    y0 = lat[iy_lo]; y1 = lat[iy_hi]
+
+    tx = (xp - x0) / (x1 - x0)
+    ty = (yp - y0) / (y1 - y0)
+
+    # keep weights sane if you clipped indices
+    tx = np.clip(tx, 0.0, 1.0)
+    ty = np.clip(ty, 0.0, 1.0)
+
+    # 4) gather four corners
+    # F00 = (y0, x0), F10 = (y0, x1), F01 = (y1, x0), F11 = (y1, x1)
+    # Works for F of shape (ny, nx) and also (..., ny, nx)
+    F00 = F[..., iy_lo, ix_lo]
+    F10 = F[..., iy_lo, ix_hi]
+    F01 = F[..., iy_hi, ix_lo]
+    F11 = F[..., iy_hi, ix_hi]
+
+    # 5) bilinear combination
+    w00 = (1 - tx) * (1 - ty)
+    w10 = tx * (1 - ty)
+    w01 = (1 - tx) * ty
+    w11 = tx * ty
+
+    # If F has leading dims, broadcast weights to match
+    # (npart,) -> (1,...,1,npart) would be needed only if you keep npart as last dim.
+    # Here F[..., iy, ix] returns shape (..., npart), so weights broadcast fine.
+    out = w00 * F00 + w10 * F10 + w01 * F01 + w11 * F11
+
+    return out, (ix_lo, ix_hi, iy_lo, iy_hi), (tx, ty)
 
