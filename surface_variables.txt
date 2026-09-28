@@ -1,0 +1,34 @@
+Visibility, vis
+Wind speed (gust), gust
+Surface pressure, sp
+Temperature, t
+Plant canopy surface water, cnwat
+Water equivalent of accumulated snow depth (deprecated), sdwe
+Snow cover, snowc
+Snow depth, sde
+Percent frozen precipitation, cpofp
+Precipitation rate, prate
+Total Precipitation, tp
+Freezing Rain, frzr
+Storm surface runoff, ssrun
+Baseflow-groundwater runoff, bgrun
+Total Precipitation, tp
+Categorical snow, csnow
+Categorical ice pellets, cicep
+Categorical freezing rain, cfrzr
+Categorical rain, crain
+Forecast surface roughness, fsr
+Frictional velocity, fricv
+Instantaneous surface sensible heat net flux, ishf
+Surface latent heat net flux, slhtf
+Ground heat flux, gflux
+Vegetation Type, vgtyp
+Convective available potential energy, cape
+Convective inhibition, cin
+Surface downward short-wave radiation flux, sdswrf
+Surface downward long-wave radiation flux, sdlwrf
+Surface upward short-wave radiation flux, suswrf
+Surface upward long-wave radiation flux, sulwrf
+Visible Beam Downward Solar Flux, vbdsf
+Visible Diffuse Downward Solar Flux, vddsf
+Boundary layer height, blh

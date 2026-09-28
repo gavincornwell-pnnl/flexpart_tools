@@ -1,0 +1,10 @@
+U component of wind, u
+V component of wind, v
+2 metre temperature, 2t
+Potential temperature, pt
+2 metre specific humidity, 2sh
+2 metre dewpoint temperature, 2d
+2 metre relative humidity, 2r
+10 metre U wind component, 10u
+10 metre V wind component, 10v
+Time-maximum 10 metre wind speed, max_10si

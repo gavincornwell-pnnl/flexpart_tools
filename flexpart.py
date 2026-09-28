@@ -264,6 +264,37 @@ def calc_srs_hrrr(fname, delta_t, utot):
     utot is the total mass released (units in kg)
     """
     import numpy as np
+    import matplotlib.dates as dt
+    import os
+
+    partout, seconds, numpart = read_partposition(fname)
+    tmp_f = os.path.basename(fname)
+    matlab_times = dt.date2num(dt.datetime.datetime.strptime(tmp_f,'partposit_%Y%m%d%H%M%S'))
+    temp_lat = partout[:, 2]
+    temp_lon = partout[:, 3]
+    temp_alt = partout[:, 4]
+    temp_hmix = partout[:, 5]
+    temp_mass = partout[:, -1]
+
+    lon, lat, lon_e, lat_e, x_e, y_e = HRRR_grid()
+
+    srs = np.zeros((1, lon.shape[0], lon.shape[1]))  # set up grid
+    hmix = np.zeros((1, lon.shape[0], lon.shape[1]))  # set up grid
+    mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices = bin_particles_HRRR(temp_lon, temp_lat, temp_alt, temp_hmix, temp_mass)
+    srs[0] = (mass_grid * delta_t / utot)
+    hmix[0] = hmix_grid
+    return srs, hmix, matlab_times
+
+
+def calc_srs_hrrr_fp11(fname, delta_t, utot):
+    """
+    This function calculates a source-receptor influence footprint for a given partouput.nc file
+    fname is the full file name for which a SRS should be generated for. meant to be run with the ouptut from flexpart11
+    simulations.
+    delta_t is the time interval that should be used in the calculation of the SRS (units in seconds)
+    utot is the total mass released (units in kg)
+    """
+    import numpy as np
 
     part_lon, part_lat, part_mass, part_z, part_hmix, time, matlab_times = read_partposition_fp11(fname)
     lon, lat, lon_e, lat_e, x_e, y_e = HRRR_grid()
@@ -281,7 +312,6 @@ def calc_srs_hrrr(fname, delta_t, utot):
         srs[iidx] = srs_tmp
         hmix[iidx] = hmix_grid
     return srs, hmix, matlab_times
-
 
 def calc_srs_wrf(fname, x_grid, y_grid, delta_t, utot):
     """
@@ -340,7 +370,7 @@ def bin_particles_NAM12(part_lon, part_lat, part_z, hmix, part_mass):
     return mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices
 
 
-def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass):
+def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass, fp11_flag = 0):
     '''
     This function is intended to take the geodetic data from particle from FLEXPART simulations and transpose it on to the NAM12 grid.
     Particle locations are transformed using pyproj, and the
@@ -356,10 +386,18 @@ def bin_particles_HRRR(part_lon, part_lat, part_z, hmix, part_mass):
 
     # only select particles that are within the boundary layer
     idx = np.where(part_z < hmix)
+    print(len(idx[0]))
+    if len(idx[0]) == 0:
+        mass_grid = np.zeros(lon.shape)
+        hmix_grid = np.zeros(lon.shape)
+        indices = []
+        return mass_grid, hmix_grid, lon, lat, lon_e, lat_e, indices
 
     # get particle grid coordinate distances
-    part_x, part_y = lcc_proj(part_lon[idx], part_lat[idx], inverse=False)
-
+    #part_x, part_y = lcc_proj(part_lon[idx], part_lat[idx], inverse=False)
+    part_x = part_lon[idx]
+    part_y = part_lat[idx]
+    print(len(part_x), len(part_y), len(part_mass))
     # bin particles by their location, and sum their mass
     mass_grid, x_edges, y_edges, indices = bs2d(x=part_x, y=part_y, values=part_mass[idx], statistic='sum',
                                                 bins=(x_e, y_e))
@@ -497,10 +535,15 @@ def HRRR_grid():
         x_grid = x_grid.T
         y_grid = y_grid.T
     lon, lat = lcc_proj(x_grid, y_grid, inverse=True)
+    x_e = x_e + np.abs(x_e[0])
+    y_e = y_e + np.abs(y_e[0])
     return lon, lat, lon_e, lat_e, x_e, y_e
 
 
-def calculate_point_HRRR(lon, lat):
+def ll_xy_HRRR(lon, lat):
+    '''
+    This function calculates the x/y coordinate (on the HRRR grid), from a given lon/lat.
+    ''' 
     from pyproj import Proj
     import numpy as np
 
@@ -513,25 +556,34 @@ def calculate_point_HRRR(lon, lat):
                     R=6371229)  # projection from the NAM12 grid, information taken from grib files
     lon1 = 237.280472  # from grib files
     lat1 = 21.138123  # from grib files
-
-    # first makes arrays that correspond to the bin edges, which will be used when binning
-    # this is needed because WRF coordinates correspond to the lower left corner of the grid cell
     llcrnrx, llcrnry = lcc_proj(lon1, lat1)
-    x_e = llcrnrx + np.arange(nx + 1) * (dx)  # has to extend out an extra grid cell because it is the edge
-    y_e = llcrnry + np.arange(ny + 1) * (dy)
+    print(llcrnrx, llcrnry)
 
-    x_grid, y_grid = np.meshgrid(x_e, y_e)
-    if x_e.shape != x_grid.shape[0]:
-        x_grid = x_grid.T
-        y_grid = y_grid.T
-    lon_e, lat_e = lcc_proj(x_grid, y_grid, inverse=True)
+    x, y = lcc_proj(lon, lat, inverse=False)
+    x = x - llcrnrx
+    y = y - llcrnry
+    return x, y
 
-    # second make a lon/lat set of arrays that corresponds to the lower left corners of the grid cells
-    x = x_e[0:-1]
-    y = y_e[0:-1]
-    x_grid, y_grid = np.meshgrid(x, y)
-    if x.shape != x_grid.shape[0]:
-        x_grid = x_grid.T
-        y_grid = y_grid.T
-    lon, lat = lcc_proj(x_grid, y_grid, inverse=True)
-    return lon, lat, lon_e, lat_e
+def xy_ll_HRRR(x, y):
+    '''
+    This function calculates the lon/lat from a given x/y coordinate, when x/y is
+    referenced to the HRRR grid.
+    ''' 
+    from pyproj import Proj
+    import numpy as np
+
+    ## set up output grids
+    dx, dy = (3000.0, 3000.0)
+    nx, ny = (1799, 1059)
+
+    # hardcoded parameters and projection information
+    lcc_proj = Proj(proj='lcc', lat_1=38.5, lat_2=38.5, lat_0=38.5, lon_0=262.5,
+                    R=6371229)  # projection from the NAM12 grid, information taken from grib files
+    lon1 = 237.280472  # from grib files
+    lat1 = 21.138123  # from grib files
+    llcrnrx, llcrnry = lcc_proj(lon1, lat1)
+    x = x + llcrnrx
+    y = y + llcrnry
+
+    lon, lat = lcc_proj(x, y, inverse=True)
+    return lon, lat
