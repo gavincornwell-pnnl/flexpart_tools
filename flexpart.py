@@ -556,7 +556,6 @@ def ll_xy_HRRR(lon, lat):
     lon1 = 237.280472  # from grib files
     lat1 = 21.138123  # from grib files
     llcrnrx, llcrnry = lcc_proj(lon1, lat1)
-    print(llcrnrx, llcrnry)
 
     x, y = lcc_proj(lon, lat, inverse=False)
     x = x - llcrnrx
