@@ -1,0 +1,17 @@
+.gitignore
+SRS_util/
+TempBasedCycleTimes.csv
+__init__.py
+__pycache__/
+flexpart_inputs/
+flexpart_wrf_inputs/
+input.3dvar.template
+input.dummy
+input.hrrr.template.old
+input.latlon
+input.new
+input.wrfcoord
+old/
+old_fw.py
+.nfs00000003e61b6803000167a3 
+.nfs0000000417148dd50001a823
