@@ -539,6 +539,7 @@ def HRRR_grid():
     y_e = y_e + np.abs(y_e[0])
     return lon, lat, lon_e, lat_e, x_e, y_e
 
+
 def ll_xy_HRRR(lon, lat):
     '''
     This function calculates the x/y coordinate (on the HRRR grid), from a given lon/lat.
