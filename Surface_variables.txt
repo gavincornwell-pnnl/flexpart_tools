@@ -32,3 +32,4 @@ Surface upward long-wave radiation flux, sulwrf
 Visible Beam Downward Solar Flux, vbdsf
 Visible Diffuse Downward Solar Flux, vddsf
 Boundary layer height, blh
+Total Cloud Cover, tcc
