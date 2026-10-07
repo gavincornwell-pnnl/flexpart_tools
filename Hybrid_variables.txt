@@ -5,8 +5,6 @@ Snow mixing ratio, snmr
 Graupel (snow pellets), grle
 Particulate matter (fine), pmtf
 Particulate matter (coarse), pmtc
-Total Cloud Cover, tcc
-Fraction of cloud cover, cc
 Geopotential height, gh
 Temperature, t
 Specific humidity, q
@@ -14,3 +12,4 @@ U component of wind, u
 V component of wind, v
 Vertical velocity, w
 Turbulent kinetic energy, tke
+Fraction of cloud cover, cc
